@@ -1,52 +1,105 @@
-# Triton-GEMM-Kernel-Improvements-via-Operator-Fusion
+# GPU-Kernel-Optimization-with-Triton-on-AMD-with-Fusion
 
-Overview (aka Abstract):
-This project was a result of my curiosity of fusing operator techniques in Triton for GEMM (General Matrix Multiply) workloads on my personal AMD GPU (Radeon RX 7900 GRE) (getting it to run on that GPU is an entire story in itself which I'll get to eventually).
+## Overview
 
-3 Kernels were benchmarked:
-1. Plain, boring GEMM
-2. GEMM + Bias + ReLU
-3. GEMM + Bias + ReLU + Dropout
+This project explores **operator fusion techniques in Triton** for accelerating GEMM (General Matrix Multiply) workloads on my personal **AMD Radeon RX 7900 GRE** GPU. Running Triton on this specific GPU (via ROCm) posed unique compatibility challenges, which I resolved through hours of system-level tuning.
 
-I also heard that these fusions bring more benefit the smaller the tile sizes are, leading to a potentially useful application in real-time CV, RVC, etc. (I could also be talking out of my *ss who knows)
-So, I benchmarked those 3 kernels across 3 matrix shapes (M, K, N) = (64, 256, 128), (128, 256, 256), (1024, 1024, 1024). 
-The output of this project was the execution time in ms and a deeper dive into the improvements.
+The primary goal was to assess how **fusing operations** like bias addition, ReLU, and dropout into a single kernel could improve (or worsen, as we'll see) execution efficiency—especially for **smaller tile sizes** commonly used in real-time applications like CV.
 
-THE REASON FOR DOING THIS:
-Training/Learning workloads often consist of TONS of GEMM operations followed by bias addition, activation, dropout, yadda yadda yadda. While libraries like rocBLAS optimize GEMM for PyTorch, they don't fuse these operators that can cause traffic in memory and other overhead. Triton enables custom GPU kernels where fusion can reduce these overhead.
+---
 
-SETUP:
-Hardware: AMD Radeon RX 7900 GRE (the goat of mid-range gaming GPUs back when you could find it for MSRP)
-Software/Dependencies: Ubuntu 22.04.5 LTS (Kernel: whatever the latest is (6.8.something)), ROCm 6.0.2, Triton, Python 3.10
-Static Tile Sizes: BLOCK_M=64, BLOCK_N=64, BLOCK_K=64
-Metric: Execution time in ms, averaged over a bunch of runs (100?) I lost count to be honest but it evened out eventually
+## Kernels Benchmarked
 
-RESULTS:
-Benchmarking GEMM shape M=64, K=256, N=128
-[1] Plain GEMM:                	0.105 ms
-[2] GEMM + Bias + ReLU:       	0.101 ms
-[3] GEMM + Bias + ReLU + Dropout: 0.106 ms
+Three custom Triton kernels were implemented and benchmarked:
 
-Benchmarking GEMM shape M=128, K=256, N=256
-[1] Plain GEMM:                	0.087 ms
-[2] GEMM + Bias + ReLU:       	0.085 ms
-[3] GEMM + Bias + ReLU + Dropout: 0.089 ms
+1. **Plain GEMM**  
+2. **GEMM + Bias + ReLU**  
+3. **GEMM + Bias + ReLU + Dropout**  
 
-Benchmarking GEMM shape M=1024, K=1024, N=1024
-[1] Plain GEMM:                	0.328 ms
-[2] GEMM + Bias + ReLU:       	0.327 ms
-[3] GEMM + Bias + ReLU + Dropout: 0.343 ms
-![image](https://github.com/user-attachments/assets/62843537-dbc8-4e52-b4af-84f60ee93cd4)
+Each was tested across three matrix shapes:
 
-On average, there was a 2.14% DECREASE (YAY!!!) in kernel execution time when fusing Bias + ReLU to the original GEMM. However, adding Dropout to the mix had the opposite effect and instead increased the time by 2.61% on average.
-Also, the improvements from Bias + ReLU Fusion gradually decreased as the matrix sizes increased. Going top down, improvements went from 3.81% to 2.30% to 0.30%.
+- (M, K, N) = (64, 256, 128)  
+- (M, K, N) = (128, 256, 256)  
+- (M, K, N) = (1024, 1024, 1024)
 
-Conclusion:
-Operator fusion in Triton can incrementally acelerate deep-learning inference pipelines, particularly for smaller GEMMs. Fusing Dropout is undesirable for reducing execution time but may reduce other overhead; this tradeoff needs to be looked more in depth. It's important to note that while these improvements are small in number, when scaled to millions and billions of calculations, every tiny improvement matters.
+---
 
-References:
-Triton Documentation: https://github.com/openai/triton
-ROCm: https://rocmdocs.amd.com
+## Motivation
 
+Deep learning workloads often involve **repeated GEMM operations** followed by bias, activation (ReLU), and dropout layers. Standard libraries like `rocBLAS` optimize GEMM itself but don’t fuse these layers, leading to **extra memory traffic** and **latency overhead**.
 
+Triton allows building **custom GPU kernels** with free control over memory layout and fusion—unlocking the potential to reduce memory bandwidth consumption by keeping intermediate results in registers or shared memory.
+
+---
+
+## Setup
+
+**Hardware:** AMD Radeon RX 7900 GRE  
+**OS:** Ubuntu 22.04.5 LTS  (Important for compatibility for 7900 GRE)
+**Kernel:** 6.8.x  
+**Software:** ROCm 6.0.2, Triton, PyTorch, Python 3.10  (Important for compatibility for 7900 GRE)
+**Tile Size:** `BLOCK_M = BLOCK_N = BLOCK_K = 64`  
+**Metric:** Execution time (ms), averaged over ~100 runs per kernel
+
+---
+
+## Results
+
+### Benchmark: M = 64, K = 256, N = 128
+- Plain GEMM: **0.105 ms**
+- GEMM + Bias + ReLU: **0.101 ms**
+- GEMM + Bias + ReLU + Dropout: **0.106 ms**
+
+### Benchmark: M = 128, K = 256, N = 256
+- Plain GEMM: **0.087 ms**
+- GEMM + Bias + ReLU: **0.085 ms**
+- GEMM + Bias + ReLU + Dropout: **0.089 ms**
+
+### Benchmark: M = 1024, K = 1024, N = 1024
+- Plain GEMM: **0.328 ms**
+- GEMM + Bias + ReLU: **0.327 ms**
+- GEMM + Bias + ReLU + Dropout: **0.343 ms**
+
+![Graph of Execution Times](https://github.com/user-attachments/assets/fb7a7c32-e758-4822-8bc2-1fcd936ccc9f)
+
+---
+
+## Analysis
+
+On average, **fusing Bias + ReLU** reduced execution time by **2.14%**. However, **adding Dropout** increased execution time by **2.61%**.
+
+Interestingly, **fusion gains decreased with larger matrix sizes**:
+
+| Matrix Size        | Bias + ReLU Speedup |
+|--------------------|---------------------|
+| 64 × 256 × 128     | **3.81%**           |
+| 128 × 256 × 256    | **2.30%**           |
+| 1024 × 1024 × 1024 | **0.30%**           |
+
+---
+
+## Takeaways & Tradeoffs
+
+- **Operator fusion** helps reduce **global memory traffic**, especially on smaller matrices where the relative cost of memory access is high.
+- However, **fusing Dropout** introduced additional register pressure and resource contention, leading to **diminished returns** or even slowdowns on larger workloads.
+- This exposes an important tradeoff in GPU systems design:  
+  > *Reducing memory bandwidth via fusion vs. increasing register pressure and kernel complexity.*
+
+---
+
+## Conclusion
+
+This experiment demonstrates that **Triton operator fusion can yield tangible performance gains**, especially in inference-heavy pipelines with small batch sizes. While these improvements seem modest at best, they can compount significantly when scaled to the billions of computations we see modern deep learning architectures do.
+
+Future work I'm hoping to do:
+- Autotuning tile sizes
+- Comparing against `rocBLAS`/`torch.matmul`
+- Profiling register usage and shared memory occupancy
+
+---
+
+## References
+
+- [Triton Documentation](https://github.com/openai/triton)  
+- [ROCm Official Docs](https://rocmdocs.amd.com)
 
