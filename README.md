@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project explores **operator fusion techniques in Triton** for accelerating GEMM (General Matrix Multiply) workloads on my personal **AMD Radeon RX 7900 GRE** GPU. Running Triton on this specific GPU (via ROCm) posed unique compatibility challenges, which I resolved through hours of system-level tuning.
+This project explores **operator fusion techniques in Triton** for accelerating GEMM (General Matrix Multiply) workloads on my personal **AMD Radeon RX 7900 GRE** GPU. Running Triton on this specific GPU (via ROCm) posed unique compatibility challenges, which I resolved through hours of system-level tuning and compatibility fixes (listed futher down).
 
 The primary goal was to assess how **fusing operations** like bias addition, ReLU, and dropout into a single kernel could improve (or worsen, as we'll see) execution efficiency—especially for **smaller tile sizes** commonly used in real-time applications like CV.
 
