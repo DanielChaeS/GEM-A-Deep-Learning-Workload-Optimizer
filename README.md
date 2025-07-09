@@ -37,7 +37,7 @@ Triton allows building **custom GPU kernels** with free control over memory layo
 **Hardware:** AMD Radeon RX 7900 GRE  
 **OS:** Ubuntu 22.04.5 LTS  (Important for compatibility for 7900 GRE)
 **Kernel:** 6.8.x  
-**Software:** ROCm 6.0.2, Triton, PyTorch, Python 3.10  (Important for compatibility for 7900 GRE)
+**Software:** ROCm 6.0.2, Triton, PyTorch, Python 3.10  (Important for compatibility for 7900 GRE) (Also, turn off Secure Boot!!!)
 **Tile Size:** `BLOCK_M = BLOCK_N = BLOCK_K = 64`  
 **Metric:** Execution time (ms), averaged over ~100 runs per kernel
 
