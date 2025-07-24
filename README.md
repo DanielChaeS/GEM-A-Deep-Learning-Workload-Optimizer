@@ -56,8 +56,9 @@ Triton allows building **custom GPU kernels** with free control over memory layo
 - GEMM + Bias + ReLU: **0.460 ms**
 - FUSED GEMM + Bias + ReLU: **0.327 ms**
 
-![Graph of Execution Times](<img width="1697" height="1101" alt="image" src="https://github.com/user-attachments/assets/ef868189-b1cb-4daf-98f7-ea6c54d79264" />
-)
+
+<img width="1697" height="1101" alt="image" src="https://github.com/user-attachments/assets/8d20a290-5821-4c89-bbd6-84dde51419fa" />
+
 
 ---
 
