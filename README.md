@@ -1,4 +1,4 @@
-# GPU-Kernel-Optimization-with-Triton-on-AMD-with-Fusion
+# GEMM_Optimizer
 
 ## Overview
 
