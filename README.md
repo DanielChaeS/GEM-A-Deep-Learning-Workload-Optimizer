@@ -2,9 +2,15 @@
 
 ## Overview
 
-This project explores **operator fusion techniques in Triton** for accelerating GEMM (General Matrix Multiply) workloads on my personal **AMD Radeon RX 7900 GRE** GPU. Running Triton on this specific GPU (via ROCm) posed unique compatibility challenges, which I resolved through hours of system-level tuning and compatibility fixes (listed futher down).
+Deep learning workloads are dominated by matrix multiplications followed by element-wise operations (bias addition, activations). Standard libraries like rocBLAS and cuBLAS optimize GEMM independently but don't fuse subsequent operations, resulting in:
 
-The primary goal was to assess how **fusing operations** like bias addition, ReLU, and dropout into a single kernel could improve (or worsen, as we'll see) execution efficiency—especially for **smaller tile sizes** commonly used in real-time applications like CV.
+- Multiple kernel launches (overhead)
+- Intermediate results written to global memory (300+ cycles latency)
+- Wasted memory bandwidth reading those intermediates back
+
+The Solution: Fuse GEMM + Bias + ReLU into a single Triton kernel, keeping intermediate results in registers/shared memory (<20 cycles latency) and eliminating redundant memory traffic.
+
+Running Triton on my specific GPU (7900 GRE) posed unique compatibility challenges, which I resolved through hours of system-level tuning and compatibility fixes (listed futher down).
 
 ---
 
