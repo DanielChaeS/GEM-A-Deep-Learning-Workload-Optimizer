@@ -12,7 +12,7 @@ The primary goal was to assess how **fusing operations** like bias addition, ReL
 
 Two custom Triton kernels were implemented and benchmarked:
 
-1. **GEMM + Bias + ReLU**
+1. **GEMM + Bias + ReLU** (PyTorch Native)
 2. **FUSED GEMM + Bias + ReLU**
 
 Each was tested across three matrix shapes:
