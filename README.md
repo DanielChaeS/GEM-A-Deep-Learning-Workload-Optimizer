@@ -1,4 +1,4 @@
-# GEMM_Optimizer
+# GEM: A Deep-Learning Workload Optimizer
 
 ## Overview
 
